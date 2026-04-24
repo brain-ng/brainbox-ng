@@ -42,13 +42,7 @@ if prompt := st.chat_input("Ask BrainBox NG anything..."):
             )
             reply = response.choices[0].message.content
             st.markdown(reply)
-
-    st.session_state.messages.append({"role": "assistant", "content": reply})import streamlit as st
-import openai
-import os
-
-st.set_page_config(page_title="BrainBox NG", page_icon="🇳🇬")
-
+            st.session_state.messages.append({"role": "assistant", "content": reply})import streamlit as st
 st.title("🇳🇬 BrainBox NG")
 st.subheader("Your Nigerian AI for WAEC & JAMB")
 
