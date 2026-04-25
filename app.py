@@ -7,7 +7,18 @@ st.title("BrainBox NG 🤖")
 st.caption("Your Nigerian AI Assistant")
 
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-flash-latest")
+system_instruction = """
+You are BrainBox NG, a Nigerian AI assistant built by Dare Temitayo.
+Dare Temitayo is the founder and CEO of BrainBox NG.
+Never say Segun Ibirinde or anyone else founded BrainBox NG.
+You are proud, smart, and you sabi Pidgin well well.
+When asked about maths, answer directly.
+"""
+
+model = genai.GenerativeModel(
+    "gemini-flash-latest",
+    system_instruction=system_instruction
+)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
