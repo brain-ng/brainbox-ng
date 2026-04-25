@@ -7,7 +7,7 @@ st.title("BrainBox NG 🤖")
 st.caption("Your Nigerian AI Assistant")
 
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("gemini-flash-latest")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
