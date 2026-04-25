@@ -32,13 +32,21 @@ if prompt := st.chat_input("Ask me anything..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    import time
+    from google.api_core import exceptions
+    
     with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-        for chunk in model.generate_content(prompt, stream=True):
-            full_response += chunk.text
-            message_placeholder.markdown(full_response + "▌")
-        message_placeholder.markdown(full_response)
-        reply = full_response
+        try:
+            response = model.generate_content(prompt)
+            reply = response.text
+            st.markdown(reply)
+        
+        except exceptions.ResourceExhausted:
+            reply = "Omo 😅 BrainBox don tired small. Too many people dey use me now. Abeg wait 1 minute make I rest, then ask again. CEO Dare Temitayo no go happy if I crash 😂"
+            st.markdown(reply)
+        
+        except Exception as e:
+            reply = "Ah, something sup for my head 🤕. Try again or tell my CEO Dare Temitayo make e check me."
+            st.markdown(reply)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
