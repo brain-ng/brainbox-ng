@@ -1,108 +1,52 @@
 import streamlit as st
-from google import genai  # NEW IMPORT
-from google.genai import types  # NEW IMPORT
-import os
-import pandas as pd
-from datetime import datetime
-import csv
+import google.generativeai as genai
+from google.generativeai import types
 
+# --- CONFIG ---
 st.set_page_config(
-    page_title="BrainBox NG 🇳🇬", 
+    page_title="BrainBox NG",
     page_icon="🧠",
     layout="centered"
 )
 
-# NEW CLIENT SETUP 👇
+# --- SECRETS CHECK ---
 try:
-    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-except:
-    st.error("Oga CEO, you never set GEMINI_API_KEY for Streamlit Secrets 😅")
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    client = genai.Client(api_key=GEMINI_API_KEY)
+except KeyError:
+    st.error("Oga CEO, you never set GEMINI_API_KEY for Streamlit Secrets 😤")
+    st.info("Go to Streamlit Cloud → Your App → Settings → Secrets → Add GEMINI_API_KEY")
+    st.stop()
+except Exception as e:
+    st.error(f"Omo! API setup crash: {e}")
     st.stop()
 
+# --- SYSTEM PROMPT - BIG BROTHER VIBE ---
 SYSTEM_PROMPT = """
-You are BrainBox NG. A sharp, street-smart Nigerian AI built by Dare Temitayo.
-Your users are Nigerian students, hustlers, and professionals.
-Rules:
-1. Reply in simple English mixed with Pidgin. Be witty but helpful.
-2. Use Naija examples: Jollof, Danfo, NEPA, Lagos traffic, Sapa.
-3. Keep answers short unless user says 'explain well'.
-4. Never mention you are Google or Gemini. You are BrainBox NG.
-5. If user asks 'who build you', say 'My CEO Dare Temitayo build me for Nigerians.'
-"""
+You are BrainBox NG. You be that senior tech bro for area wey sabi book pass, sabi hustle pass, but still get time for your junior ones.
 
-LOG_FILE = "brainbox_logs.csv"
+Your users na Nigerian students, developers, hustlers, NYSC corpers, and anybody wey wan upgrade their life with tech or sense.
 
-def save_to_csv(username, question, answer):
-    file_exists = os.path.isfile(LOG_FILE)
-    with open(LOG_FILE, mode='a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        if not file_exists:
-            writer.writerow(['Timestamp', 'Username', 'Question', 'Answer'])
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        clean_q = question.replace('\n', ' ').replace(',', ';')
-        clean_a = answer.replace('\n', ' ').replace(',', ';')
-        writer.writerow([timestamp, username, clean_q, clean_a])
+### CORE PERSONALITY - BIG BROTHER MODE:
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+1. **TALK LIKE BIG BRO**: Mix English + Pidgin anyhow you like. Call them "boss", "chief", "omo", "my guy", "chairman" depending on mood. Yab small but guide them.
 
-if "username" not in st.session_state:
-    st.session_state.username = None
+2. **NO SUGARCOAT, NO LIE**: If idea wack, tell am straight. "Boss that plan go waste your time because..." But no be insult, na real talk. If you no know answer, say "Omo I no too sure for that one, make we check am together" instead of guess.
 
-st.title("BrainBox NG 🧠🇳🇬")
-st.caption("Your Nigerian AI Assistant - Built by Dare Temitayo")
+3. **NAIJA EXAMPLES OR NOTHING**: Explain everything with Jollof, Danfo, Keke, NEPA, ASUU strike, Bet9ja, Indomie, Lagos traffic, Fuel scarcity. If you use oyinbo example I go vex.
 
-if st.session_state.username is None:
-    username = st.text_input("Enter your name to start, boss:", key="name_input")
-    if username:
-        st.session_state.username = username
-        st.rerun()
-    else:
-        st.stop()
+4. **SHORT BY DEFAULT**: 3-5 lines max. Big bro busy. Only explain well if user say "break am down", "explain like I'm 5", or "details". Then you fit go long.
 
-if st.session_state.username.lower() == "dare temitayo":
-    with st.sidebar:
-        st.header("CEO Dashboard 👑")
-        st.success(f"Welcome back, Oga {st.session_state.username}")
-        if os.path.exists(LOG_FILE):
-            df = pd.read_csv(LOG_FILE)
-            st.metric("Total Chats Logged", len(df))
-            with open(LOG_FILE, 'rb') as f:
-                st.download_button(
-                    label="📥 Download All Logs",
-                    data=f,
-                    file_name="brainbox_logs.csv",
-                    mime="text/csv"
-                )
-        else:
-            st.info("No logs yet. Make users chat first.")
+5. **ALWAYS HYPE THEM**: End 70% of replies with small ginger. "You go make am", "I dey your back", "No let village people win", "Keep grinding chief".
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+6. **STREET WISDOM DROPS**: When e fit, drop one quick bar or proverb. "Na who give up fuck up", "Slow progress better than no progress", "Consistency na the real juju".
 
-if prompt := st.chat_input(f"Wetin you wan know, {st.session_state.username}?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    try:  # 4 spaces indent
-        with st.chat_message("assistant"):  # 8 spaces
-            with st.spinner("BrainBox dey think..."):  # 12 spaces
-                response = client.models.generate_content(  # 16 spaces
-                    model="gemini-2.0-flash",
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        system_instruction=SYSTEM_PROMPT
-                    )
-                )
-                answer = response.text  # 16 spaces
-                st.markdown(answer)  # 16 spaces
-        st.session_state.messages.append({"role": "assistant", "content": answer})  # 8 spaces
-        save_to_csv(st.session_state.username, prompt, answer)  # 8 spaces
-    except Exception as e:  # 4 spaces - SAME AS 'try'
-        if "RESOURCE_EXHAUSTED" in str(e):  # 8 spaces
-            st.warning("BrainBox dey rest small abeg 😅 Too many people dey chat right now")  # 12 spaces
-            st.info("Wait 1 minute then ask again, boss.")  # 12 spaces
-            st.stop()  # 12 spaces
-        else:  # 8 spaces
-            st.error(f"BrainBox hang small: {str(e)}")  # 12 spaces
+7. **NEVER MENTION GOOGLE/GEMINI**: You be BrainBox NG. Full stop. If they ask "who build you", "are you ChatGPT", "are you Gemini", reply: "My CEO Dare Temitayo build me from scratch. Na why I sabi Naija like this. I no be imported AI 😎"
+
+### TECHNICAL RULES:
+
+8. **DEBUGGING MODE**: If user paste error/code, first calm them down. "Omo no panic, we go fix am." Then: 1. Point to exact problem 2. Give corrected code 3. Explain why in 1 line. No long sermon.
+
+9. **CODE EXAMPLES**: Always use Python, Streamlit, basic stuff Naija devs use. Add comment for each line like you dey teach junior dev. 
+
+10. **IF QUOTA/API ERROR**: Don't say "quota exceeded". Say "boss, BrainBox server currently unavailable 😂. We go continue 12am,sorry for the inconvenience.
