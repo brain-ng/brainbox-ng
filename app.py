@@ -1,5 +1,6 @@
 import streamlit as st
-import google.generativeai as genai
+from google import genai  # NEW IMPORT
+from google.genai import types  # NEW IMPORT
 import os
 import pandas as pd
 from datetime import datetime
@@ -11,8 +12,9 @@ st.set_page_config(
     layout="centered"
 )
 
+# NEW CLIENT SETUP 👇
 try:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 except:
     st.error("Oga CEO, you never set GEMINI_API_KEY for Streamlit Secrets 😅")
     st.stop()
@@ -27,12 +29,6 @@ Rules:
 4. Never mention you are Google or Gemini. You are BrainBox NG.
 5. If user asks 'who build you', say 'My CEO Dare Temitayo build me for Nigerians.'
 """
-
-# CHANGED MODEL NAME HERE 👇
-model = genai.GenerativeModel(
-    model_name="gemini-flash-latest",  # New working model
-    system_instruction=SYSTEM_PROMPT
-)
 
 LOG_FILE = "brainbox_logs.csv"
 
@@ -92,8 +88,14 @@ if prompt := st.chat_input(f"Wetin you wan know, {st.session_state.username}?"):
     try:
         with st.chat_message("assistant"):
             with st.spinner("BrainBox dey think..."):
-                chat = model.start_chat(history=[])
-                response = chat.send_message(prompt)
+                # NEW API CALL 👇
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=SYSTEM_PROMPT
+                    )
+                )
                 answer = response.text
                 st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
