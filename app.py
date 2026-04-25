@@ -22,12 +22,12 @@ if prompt := st.chat_input("Ask me anything..."):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-    message_placeholder = st.empty()
-    full_response = ""
-    for chunk in model.generate_content(prompt, stream=True):
-        full_response += chunk.text
-        message_placeholder.markdown(full_response + "▌")
-    message_placeholder.markdown(full_response)
-    reply = full_response
-    
+        message_placeholder = st.empty()
+        full_response = ""
+        for chunk in model.generate_content(prompt, stream=True):
+            full_response += chunk.text
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
+        reply = full_response
+
     st.session_state.messages.append({"role": "assistant", "content": reply})
