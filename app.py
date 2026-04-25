@@ -85,26 +85,24 @@ if prompt := st.chat_input(f"Wetin you wan know, {st.session_state.username}?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
-    try:
-        with st.chat_message("assistant"):
-            with st.spinner("BrainBox dey think..."):
-                # NEW API CALL 👇
-                response = client.models.generate_content(
+    try:  # 4 spaces indent
+        with st.chat_message("assistant"):  # 8 spaces
+            with st.spinner("BrainBox dey think..."):  # 12 spaces
+                response = client.models.generate_content(  # 16 spaces
                     model="gemini-2.0-flash",
                     contents=prompt,
                     config=types.GenerateContentConfig(
                         system_instruction=SYSTEM_PROMPT
                     )
                 )
-                answer = response.text
-                st.markdown(answer)
-        st.session_state.messages.append({"role": "assistant", "content": answer})
-        save_to_csv(st.session_state.username, prompt, answer)
-        except Exception as e:
-        if "RESOURCE_EXHAUSTED" in str(e):
-            st.warning("BrainBox dey rest small abeg 😅 Too many people dey chat right now")
-            st.info("Wait 1 minute then ask again, boss.")
-            st.stop()
-        else:
-            st.error(f"BrainBox hang small: {str(e)}")
-            st.info("Check your GEMINI_API_KEY for Streamlit Secrets or try again.")
+                answer = response.text  # 16 spaces
+                st.markdown(answer)  # 16 spaces
+        st.session_state.messages.append({"role": "assistant", "content": answer})  # 8 spaces
+        save_to_csv(st.session_state.username, prompt, answer)  # 8 spaces
+    except Exception as e:  # 4 spaces - SAME AS 'try'
+        if "RESOURCE_EXHAUSTED" in str(e):  # 8 spaces
+            st.warning("BrainBox dey rest small abeg 😅 Too many people dey chat right now")  # 12 spaces
+            st.info("Wait 1 minute then ask again, boss.")  # 12 spaces
+            st.stop()  # 12 spaces
+        else:  # 8 spaces
+            st.error(f"BrainBox hang small: {str(e)}")  # 12 spaces
