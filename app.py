@@ -100,6 +100,11 @@ if prompt := st.chat_input(f"Wetin you wan know, {st.session_state.username}?"):
                 st.markdown(answer)
         st.session_state.messages.append({"role": "assistant", "content": answer})
         save_to_csv(st.session_state.username, prompt, answer)
-    except Exception as e:
-        st.error(f"BrainBox hang small: {str(e)}")
-        st.info("Check your GEMINI_API_KEY for Streamlit Secrets or try again.")
+        except Exception as e:
+        if "RESOURCE_EXHAUSTED" in str(e):
+            st.warning("BrainBox dey rest small abeg 😅 Too many people dey chat right now")
+            st.info("Wait 1 minute then ask again, boss.")
+            st.stop()
+        else:
+            st.error(f"BrainBox hang small: {str(e)}")
+            st.info("Check your GEMINI_API_KEY for Streamlit Secrets or try again.")
