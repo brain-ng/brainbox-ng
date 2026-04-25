@@ -69,4 +69,57 @@ st.caption("Your Nigerian AI Assistant - Built by Dare Temitayo")
 # --- 8. GET USERNAME ---
 if st.session_state.username is None:
     username = st.text_input("Enter your name to start, boss:", key="name_input")
-    if username
+    if username:  # <-- COLON ADDED HERE
+        st.session_state.username = username
+        st.rerun()
+    else:
+        st.stop()
+
+# --- 9. CEO DASHBOARD - ONLY FOR DARE ---
+if st.session_state.username.lower() == "dare temitayo":
+    with st.sidebar:
+        st.header("CEO Dashboard 👑")
+        st.success(f"Welcome back, Oga {st.session_state.username}")
+        
+        if os.path.exists(LOG_FILE):
+            df = pd.read_csv(LOG_FILE)
+            st.metric("Total Chats Logged", len(df))
+            
+            with open(LOG_FILE, 'rb') as f:
+                st.download_button(
+                    label="📥 Download All Logs",
+                    data=f,
+                    file_name="brainbox_logs.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.info("No logs yet. Make users chat first.")
+
+# --- 10. SHOW OLD MESSAGES ---
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# --- 11. CHAT INPUT ---
+if prompt := st.chat_input(f"Wetin you wan know, {st.session_state.username}?"):
+    # Add user message
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Get AI response
+    try:
+        with st.chat_message("assistant"):
+            with st.spinner("BrainBox dey think..."):
+                chat = model.start_chat(history=[])
+                response = chat.send_message(prompt)
+                answer = response.text
+                st.markdown(answer)
+        
+        # Save to session + CSV
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+        save_to_csv(st.session_state.username, prompt, answer)
+        
+    except Exception as e:
+        st.error(f"BrainBox hang small: {str(e)}")
+        st.info("Check your GEMINI_API_KEY for Streamlit Secrets or try again.")
