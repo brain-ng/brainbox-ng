@@ -1,52 +1,72 @@
 import streamlit as st
 import google.generativeai as genai
+import os
+import pandas as pd
+from datetime import datetime
+import csv
 
-st.set_page_config(page_title="BrainBox NG", page_icon="🤖")
-
-st.title("BrainBox NG 🤖")
-st.caption("Your Nigerian AI Assistant")
-
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-system_instruction = """
-You are BrainBox NG, a Nigerian AI assistant built by Dare Temitayo.
-Dare Temitayo is the founder and CEO of BrainBox NG.
-Never say Segun Ibirinde or anyone else founded BrainBox NG.
-You are proud, smart, and you sabi Pidgin well well.
-When asked about maths, answer directly.
-"""
-
-model = genai.GenerativeModel(
-    "gemini-flash-latest",
-    system_instruction=system_instruction
+# --- 1. CONFIG ---
+st.set_page_config(
+    page_title="BrainBox NG 🇳🇬", 
+    page_icon="🧠",
+    layout="centered"
 )
 
+# --- 2. LOAD API KEY FROM SECRETS ---
+try:
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+except:
+    st.error("Oga CEO, you never set GEMINI_API_KEY for Streamlit Secrets 😅")
+    st.stop()
+
+# --- 3. BRAINBOX PERSONALITY ---
+SYSTEM_PROMPT = """
+You are BrainBox NG. A sharp, street-smart Nigerian AI built by Dare Temitayo.
+Your users are Nigerian students, hustlers, and professionals.
+Rules:
+1. Reply in simple English mixed with Pidgin. Be witty but helpful.
+2. Use Naija examples: Jollof, Danfo, NEPA, Lagos traffic, Sapa.
+3. Keep answers short unless user says 'explain well'.
+4. Never mention you are Google or Gemini. You are BrainBox NG.
+5. If user asks 'who build you', say 'My CEO Dare Temitayo build me for Nigerians.'
+"""
+
+# --- 4. LOAD MODEL ---
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+    system_instruction=SYSTEM_PROMPT
+)
+
+# --- 5. CSV LOGGING FUNCTION ---
+LOG_FILE = "brainbox_logs.csv"
+
+def save_to_csv(username, question, answer):
+    """Save each chat to CSV. Creates file with headers if e no exist."""
+    file_exists = os.path.isfile(LOG_FILE)
+    
+    with open(LOG_FILE, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['Timestamp', 'Username', 'Question', 'Answer'])
+        
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Clean text so CSV no break
+        clean_q = question.replace('\n', ' ').replace(',', ';')
+        clean_a = answer.replace('\n', ' ').replace(',', ';')
+        writer.writerow([timestamp, username, clean_q, clean_a])
+
+# --- 6. SESSION STATE ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+if "username" not in st.session_state:
+    st.session_state.username = None
 
-if prompt := st.chat_input("Ask me anything..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+# --- 7. APP HEADER ---
+st.title("BrainBox NG 🧠🇳🇬")
+st.caption("Your Nigerian AI Assistant - Built by Dare Temitayo")
 
-    import time
-    from google.api_core import exceptions
-    
-    with st.chat_message("assistant"):
-        try:
-            response = model.generate_content(prompt)
-            reply = response.text
-            st.markdown(reply)
-        
-        except exceptions.ResourceExhausted:
-            reply = "Omo 😅 BrainBox don tired small. Too many people dey use me now. Abeg wait 1 minute make I rest, then ask again. CEO Dare Temitayo no go happy if I crash 😂"
-            st.markdown(reply)
-        
-        except Exception as e:
-            reply = "Ah, something sup for my head 🤕. Try again or tell my CEO Dare Temitayo make e check me."
-            st.markdown(reply)
-
-    st.session_state.messages.append({"role": "assistant", "content": reply})
+# --- 8. GET USERNAME ---
+if st.session_state.username is None:
+    username = st.text_input("Enter your name to start, boss:", key="name_input")
+    if username
